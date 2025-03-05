@@ -122,10 +122,22 @@ HASHCAT
 		
 		man hashcat
 		
-		example brute force:
 		
+		-m <number>:	- specify mode (based on hash type)
+		-a <number>:	- specify attack mode
+									   0 = Straight
+									   1 = Combination
+									   3 = Brute-force
+									   6 = Hybrid Wordlist + Mask
+									   7 = Hybrid Mask + Wordlist
+
+						
+		-o:				- define output file
+		--show: 		- show cracked passwords
 		
-		
+		example:
+		hashcat -a 3 -m 17200 /sg/hashedfile.txt
+		hashcat -a 1 -m 200 /sg/hashedfile.txt /usr/share/wordlists/rockyout.txt
 		
 		
 		
