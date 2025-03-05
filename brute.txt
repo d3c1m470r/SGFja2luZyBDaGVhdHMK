@@ -1,0 +1,149 @@
+JOHN
+
+	hash cracker
+	example: john filename.hash --wordlist=/usr/share/wordlists/1k.txt
+
+	John can be very particular about the formats it needs data in to be able to work with it; for this reason,
+	to crack /etc/shadow passwords, you must combine it with the /etc/passwd file for John to understand the data it’s being given.
+	To do this, we use a tool built into the John suite of tools called unshadow. The basic syntax of unshadow is as follows:
+
+	unshadow [path to passwd] [path to shadow]
+
+	unshadow: Invokes the unshadow tool
+	[path to passwd]: The file that contains the copy of the /etc/passwd file you’ve taken from the target machine
+
+
+	john --wordlist=/usr/share/wordlists/rockyou.txt --format=sha512crypt unshadowed.txt
+
+	john --list=formats | grep -iF "md5".
+
+	
+	
+	the following script searches for the echoed string inside the specified file in parallel in 100mb blocks and writes to results.txt
+	
+	echo "search_string" | parallel --pipe-part --block 100M -a rockyou2024.txt -k --compress grep -a -F -x >> results.txt
+	
+	
+
+HYDRA
+
+	brute force online services
+
+	example:
+	hydra -l <username> -P <password_list.txt> pop3://10.10.10.10:55007/<login_page>
+	hydra -l <username> -P <wordlist> 10.10.10.10 http-post-form "/:username=^USER^&password=^PASS^:F=incorrect" -V
+																				dont replace USER and PASS
+
+
+	!!! never forget -v or -vV for verbosity !!!
+	
+	-l: username
+	-L: specify txt file for list of usernames
+	-P: specify txt file for list of passes
+	-x: min:max:charset   password generate min:max numeric value
+	-y: disable symbols in generated passes with -x
+	-f: exit after first found log/pass match
+	-w: specify wait time (connection timeout) to reduce or increase default (esp if srvr drops connect for longer wait times, default 32)
+	-t: specify number of parallel tasks (connection may drop if too high, try 8 or 4 or 2, default is 16)
+	-I: skip wait time (good if running new tries, default 10 sec wait for resuming old one)
+	-R: resume old instance (no other flags required)
+	-s <portnumber>: specify port if not protocol default is set on target
+	-d: debugging
+	
+
+SQLMAP
+	
+	-u: specify url
+	--dbs: extract all databases
+	--tables: extract tables
+	-D: specify database to use
+	-T: specify table from specified database
+	--dump: self explanatory
+	
+	sqlmap -u http://sqlmaptesting.thm/search/cat=1 -D users --tables
+	sqlmap -u http://sqlmaptesting.thmsearch/cat=1 -D users -T thomas --dump
+	
+	
+
+WIFI DEAUTH AND CRACKING HANDSHAKE
+
+
+
+	if not in monitor mode  - sudo ip link set dev ---wlanid--- down
+							- sudo iw dev ---wlanid --- set type monitor
+							- sudo ip link set dev ---wlanid--- up
+							
+							
+			iw dev ---wlanid--- scan
+			look for RSN part - group cipher CCMP - cipher block chaining message auth code proto
+			auth suites should be PSK - WPA/2 password based auth
+
+
+			sudo airodump-ng wlp3s0
+	
+				--- get bssid of target 
+										
+									
+													
+								
+										
+	after we get bssid run airodump to capture handshakes before running aireplay to deauth
+
+		sudo airodump-ng -c 6 --bssid xx:xx:xx:xx:xx:xx -w output-file wlanx
+					 the -c specifies the channel - if not set, airodump will scan/capture all channels - to change channel:
+						  sudo iw dev wlp3s0 set channel 1
+						  
+		sudo aireplay-ng -0 1 -a 02:00:00:00:00:00 -c 02:00:00:00:01:00 wlp3s0
+		
+		The -0 flag indicates the deauthentication attack, 
+		The 1 value is the number of deauths to send. 
+		The -a indicates the BSSID of the access point.
+		and -c indicates the BSSID of the client to deauthenticate.					
+			
+
+
+
+		once we got the wpa handshake we can start to try and crack the code
+		
+		sudo aircrack-ng -a 2 -b xx:xx:xx:xx:xx:xx -w rockyou.txt output*cap
+					 the -a specifies the wpa/wpa2 attack mode	
+								
+		 If you get Packets contained no EAPOL data; unable to process this AP error,
+		 this means that you ran aircrack-ng prior to the handshake being captured,
+		 or that the handshake was not captured at all. 
+
+
+
+HASHCAT
+
+		hash cracker, using gpu for faster operations than john
+		can take files as wordlists or generate passwords or combine both
+		can add or modify characters of provided wordlists
+		
+		man hashcat
+		
+		example brute force:
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+
+

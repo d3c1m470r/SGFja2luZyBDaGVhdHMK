@@ -1,0 +1,33 @@
+STEGHIDE
+
+		example: steghide embed -cf hulladek.jpg -ef 'file_to_hide.txt'
+
+		-ef: embed file, specify name after flag
+		-cf: coverfile, specify file to hide embed file in
+		-sf: stegofile, specify file to create
+		-e: encryption type. default is aes-128. use -e none if dont want enc
+		-z: compression lvl specified by num val 1-9
+
+		common opts:
+
+		-p: passphrase (whitespaces require quotes) example: -p "this is it"
+		-v: verbose
+		-q: quiet
+		-f: forced, overwriting existing files
+
+
+
+
+
+EXIFTOOL
+	
+		for metadata manipulation/extraction
+		
+		example:
+			exiftool -v Screenshot_2024-12-17.png
+		
+
+
+
+
+
