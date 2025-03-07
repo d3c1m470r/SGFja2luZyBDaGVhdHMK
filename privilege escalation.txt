@@ -17,16 +17,25 @@ LIN:
 
 	!look 4 installed softwares!
 
-	dpkg -l	
+	dpkg -l
+	-v or --version to check after finding stuff
+	id
 	uname -a
-	cat /proc/version
-	cat /etc/issue
+	hostname
+	ifconfig
+	netstat -tp 	- list connections+service name+pid
+	netstat -ano 	- display all sockets, no name res, display timers
+	/proc/version
+	/etc/issue
 	ps
 	ps -A
 	ps aux			- processes for all users, who started them and x - xternal processes (to terminal)
 	env             - will show environment vars
 	cat /etc/passwd | cut -d ":" -f 1
 	find / -perm -u=s -type f 2>/dev/null	- finds files with SUID bit set
+	find / -writable -type d 2>/dev/null : Find world-writeable folders
+	find / -perm -222 -type d 2>/dev/null: Find world-writeable folders
+	find / -perm -o w -type d 2>/dev/null: Find world-writeable folders
 	
 	./linpeas.sh
 	

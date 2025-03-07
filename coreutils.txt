@@ -1,4 +1,4 @@
-
+some are not 'core' utils but need to be installed
 
 CHMOD
 
@@ -36,6 +36,21 @@ ECHO
 			-e: enables interpretation of \n as newline
 			example:
 			echo -e "\n=== Memory ==="  ## will instert a newline before ===
+			
+			
+			
+			
+			
+GREP
+		search tool
+		
+		basic syntax:
+		grep 'options' 'search string' 'filename(if any)'
+		
+		-n: display line number along with the matching line when searching in file
+
+
+
 			
 			
 ~/.bashrc
@@ -109,12 +124,21 @@ FIND
 
 
 
+PARALLEL    - for process parallelization so tools can use more than 1 cpu cores (if they dont do it by default)
+
+			
+			
+			counting lines with wc
+			parallel --pipe wc -l < wordlist.txt | awk '{sum+=$1} END {print sum}'
+			
+			searching for a string in a huge file
+			echo "search_string" | parallel --pipe-part --block 100M -a rockyou2024.txt -k --compress grep -a -F -x >> results.txt
+	
 
 
+PV			- pipe viewer - for seeing process statuses
 
-
-
-
+			pv wordlist.txt | wc -l					- can view progress of wc -l
 
 
 

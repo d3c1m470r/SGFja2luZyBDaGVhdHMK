@@ -1,7 +1,14 @@
 JOHN
 
 	hash cracker
-	example: john filename.hash --wordlist=/usr/share/wordlists/1k.txt
+	https://github.com/openwall/john/blob/bleeding-jumbo/doc
+	
+	example: 
+	
+			john filename.hash --wordlist=/usr/share/wordlists/1k.txt
+			
+			
+		cat /usr/share/doc/john/OPTIONS   - these files are .gz so gunzip em first
 
 	John can be very particular about the formats it needs data in to be able to work with it; for this reason,
 	to crack /etc/shadow passwords, you must combine it with the /etc/passwd file for John to understand the data it’s being given.
@@ -16,12 +23,67 @@ JOHN
 	john --wordlist=/usr/share/wordlists/rockyou.txt --format=sha512crypt unshadowed.txt
 
 	john --list=formats | grep -iF "md5".
+	
+	john -i mypasswd.txt    			- incremental mode
+	
+	MASKING: specify characters to be used as password tries (instead of simple incremental)
+				
+	
+								Mask									hybrid				output			candidates
+					     --mask='pass'	 								pass								1
+								pw?d	 								pw3									10
+								?w?d?d?d								password			password123		1000x
+								?w?s?w									Bozo				Bozo#Bozo		33x
+								?w?s?W									Bozo				Bozo#bOZO		33x
+								0x?1?1:?1?1:?1?1						-1=[0-9a-f]			0xde:ad:ca		16777216
+								?3?l?l?l								-3=?l?u				Bozo, hobo		913952
+								[Pp][Aa@][Ss5][Ss5][Ww][Oo0][Rr][Dd]						P@55w0rD		1296
+								
+				Basic Characters:	
+									?a: Any ascii character
+									?l: Lowercase letters (a-z)
+									?u: Uppercase letters (A-Z)
+									?d: Digits (0-9)
+									?s: Special characters (!@#...)
+									?h: Hexadecimal digits (0-9, a-f)
+						example:
+									john --incremental --mask='?l?l?l?l?l?l?l?l' hashfile.txt   - 8 any lowercase ascii to combine vs the hash
+									
+									
+									
+					once hash is cracked: <BOOM>
+					 john --show <filename>
+					 cracked val can also be seen 3rd line beginning from bottom once finished
+									
 
+									
+																	
+				hex encoding:
+					\xHH for specifying any character code. For example, \x41 is “A” and \x09 is the code for TAB.
+					
+			
+			
+			
+			examples:
+						--mask='?a' --min-length=7 --max-length=7		
+								
+								
+						
+						
 	
 	
 	the following script searches for the echoed string inside the specified file in parallel in 100mb blocks and writes to results.txt
 	
-	echo "search_string" | parallel --pipe-part --block 100M -a rockyou2024.txt -k --compress grep -a -F -x >> results.txt
+	parallel --block 100M --pipe-part -a rockyou2021.txt -k --compress "grep -a -F -x 'search_string' {}" >> results.txt
+	
+	with progress bar:
+	
+	cat 2021.txt | pv | parallel --pipe --block 10M grep -n 'searchstring'
+	
+	
+	
+	line sum calc:
+	parallel --pipe wc -l < wordlist.txt | awk '{sum+=$1} END {print sum}'
 	
 	
 
@@ -139,7 +201,8 @@ HASHCAT
 		hashcat -a 3 -m 17200 /sg/hashedfile.txt
 		hashcat -a 1 -m 200 /sg/hashedfile.txt /usr/share/wordlists/rockyout.txt
 		
-		
+		Passwords consist of six characters and begin with “Pa”, the rest of the characters are numbers:
+		hashcat -m 17200 -a 3 hashedfile.txt 'Pa?d?d?d?d'
 		
 		
 		

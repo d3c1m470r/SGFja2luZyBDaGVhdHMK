@@ -1,0 +1,102 @@
+LINUX
+
+
+	lin commands
+
+	Uncomplicated FireWall
+		ufw status
+		ufw default allow/deny outgoing/ 22/tcp /
+		ufw status numbered
+		ufw delete 2
+		
+
+
+	Netfilter
+				Netfilter is the framework inside the Linux OS with core firewall functionalities, including packet filtering,
+				NAT, and connection tracking. This framework serves as the foundation for various firewall utilities available
+				in Linux to control network traffic. Some common firewall utilities that utilize this framework are listed below:
+
+		iptables: This is the most widely used utility in many Linux distributions.
+			  It uses the Netfilter framework that provides various functionalities to control network traffic.
+	 
+		nftables: It is a successor to the “iptables” utility, with enhanced packet filtering and NAT capabilities. 
+			  It is also based on the Netfilter framework.
+
+		firewalld: This utility also operates on the Netfilter framework and has predefined rule sets.
+			   It works differently from the others and comes with different pre-built network zone configurations.
+	 
+
+WINDOWS
+
+
+
+
+
+IDS
+	2 deployment modes:
+		HIDS - host based ids installed individually, only for local inspection
+		
+		NIDS - network based ids
+		
+	3 detection modes:
+		Signature based 
+		Anomaly based
+		Hybrid
+		
+	
+	
+	
+	
+	
+	Snort
+		3 modes
+			packet sniffer
+			packet logger
+			NIDS - network intrusion detection system
+		
+		
+	Usage:
+		snort [-options] <filter options>
+		-A: Set alert mode: fast, full, console, test or none  (alert file alerts only)
+		-b: log packets in tcpdump format (much faster)
+		-C: output no hex only chardata
+		-i: listen on interface
+		-l: log to directory
+		-r: read and process tcpdump file
+		-X: dump raw packet data at link layer
+		-y: year in timestamp
+		-?: more help
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
