@@ -36,6 +36,11 @@ LIN:
 	find / -writable -type d 2>/dev/null : Find world-writeable folders
 	find / -perm -222 -type d 2>/dev/null: Find world-writeable folders
 	find / -perm -o w -type d 2>/dev/null: Find world-writeable folders
+	find / -type f -perm -04000 -ls 2>/dev/null: Find files with SUID bit set
+					-perm -02000: SGID bit 
+					-perm -06000: SUID and SGID bits
+					
+					
 	
 	./linpeas.sh
 	

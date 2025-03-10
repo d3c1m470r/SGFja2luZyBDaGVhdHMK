@@ -199,7 +199,7 @@ HASHCAT
 		
 		example:
 		hashcat -a 3 -m 17200 /sg/hashedfile.txt
-		hashcat -a 1 -m 200 /sg/hashedfile.txt /usr/share/wordlists/rockyout.txt
+		hashcat -a 0 -m 200 /sg/hashedfile.txt /usr/share/wordlists/rockyout.txt
 		
 		Passwords consist of six characters and begin with “Pa”, the rest of the characters are numbers:
 		hashcat -m 17200 -a 3 hashedfile.txt 'Pa?d?d?d?d'
