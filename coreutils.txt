@@ -1,5 +1,17 @@
 some are not 'core' utils but need to be installed
 
+
+
+installing software from .deb packages:
+
+sudo dpkg -i 'filename.deb'
+then if its not possible to launch from terminal then needs to be added to PATH. We need to find the executable of the app and append its path to .bashrc:
+echo 'export PATH=$PATH:/path/to/binary' >> ~/.bashrc
+then reload terminal for this to take effect
+source ~/.bashrc
+done
+
+
 CHMOD
 
 		changes file ownership adding permission bits
@@ -26,7 +38,8 @@ CHMOD
 				works like this: chmod u+rw /path/to/file - changes user permissions to read and write
 								 chmod g-x /path/to/file - removes group execute permissions
 								 
-								 
+			Set SUID bits:
+								chmod u+s 'filename'
 
 
 
@@ -116,7 +129,7 @@ FIND
 		find / -atime 10						- accessed
 		find / -cmin -60						- changed (past 60 min)
 		find / -amin -60						- accessed (past 60 min)
-		find / -size +50M						- sizes of 50mb '+' or '-' specifies bigger or smaller
+		find / -size +50M 2>/dev/null			- sizes of 50mb '+' or '-' specifies bigger or smaller
 		find / -writable -type d 2>/dev/null	- world writable dirs
 		find / -perm 222 -type d 2>/dev/null	- same
 		find / -perm -o w -type d 2>/dev/null	- same
@@ -142,5 +155,9 @@ PV			- pipe viewer - for seeing process statuses
 
 
 
+
+DIG			- checking dns records for specified hostname.
+			dig something.com
+				
 
 

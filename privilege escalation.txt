@@ -40,7 +40,8 @@ LIN:
 					-perm -02000: SGID bit 
 					-perm -06000: SUID and SGID bits
 					
-					
+	find / -writable 2>/dev/null | cut -d "/" -f 2,3 | grep -v proc | sort -u
+						list writable files/folders in a sorted order w/o related processes
 	
 	./linpeas.sh
 	
@@ -48,15 +49,48 @@ LIN:
 	
 	
 
-	cron jobs ->if write permission-> /etc/crontab
-						  /etc/cron.d
-						  /var/spool/cron/crontabs/root
+	cron jobs ->if write permission-> 
+										/etc/crontab
+										/etc/cron.d
+										/var/spool/cron/crontabs/root
+										
+										
+	PATH
+				What folders are located under $PATH
+				Does your current user have write privileges for any of these folders?
+				Can you modify $PATH?
+				Is there a script/application you can start that will be affected by this vulnerability?
+				
+				
+				echo $PATH
+				find / -writable 2>/dev/null
+				find / -perm 222 -type d 2>/dev/null
+				grep -r "PATH=" /etc ~/ 2>/dev/null
+				export PATH=/tmp:$PATH
+				
 
 	SSH keys: ->if read permission-> /home/user/.ssh/id_rsa
 							/root/.ssh/id_rsa
 				If we can read the /root/.ssh/ directory and can read the id_rsa file, we can copy it to our machine and use the -i flag to log in with it:  vim id_rsa
 					chmod 600 id_rsa
 					ssh user@10.10.10.10 -i id_rsa
+					
+	
+	NFS
+			network file sharing
+			cat /etc/exports
+			
+			
+			getting info of mountable shares
+			showmount -e 1.1.1.1
+	
+	
+					
+	getcap:
+		get info about what proc/binaries on the system are able to 
+		run underprivileged but still execute root level functions
+		
+		getcap -r / 2>/dev/null
 
 
 
